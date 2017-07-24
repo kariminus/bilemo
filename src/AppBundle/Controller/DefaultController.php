@@ -2,6 +2,8 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Api\ApiProblem;
+use AppBundle\Api\ApiProblemException;
 use AppBundle\Entity\Phone;
 use AppBundle\Form\PhoneType;
 use AppBundle\Form\UpdatePhoneType;
@@ -13,6 +15,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -30,7 +33,7 @@ class DefaultController extends Controller
     {
         // replace this example code with whatever you need
         return $this->render('default/index.html.twig', [
-            'base_dir' => realpath($this->getParameter('kernel.project_dir')).DIRECTORY_SEPARATOR,
+            'base_dir' => realpath($this->getParameter('kernel.project_dir')) . DIRECTORY_SEPARATOR,
         ]);
     }
 
@@ -43,6 +46,10 @@ class DefaultController extends Controller
         $phone = new Phone();
         $form = $this->createForm(PhoneType::class, $phone);
         $this->processForm($request, $form);
+
+        if (!$form->isValid()) {
+            $this->throwApiProblemException($form);
+        }
 
         $em = $this->getDoctrine()->getManager();
         $em->persist($phone);
@@ -115,6 +122,10 @@ class DefaultController extends Controller
         $form = $this->createForm(UpdatePhoneType::class, $phone);
         $this->processForm($request, $form);
 
+        if (!$form->isValid()) {
+            $this->throwApiProblemException($form);
+        }
+
         $em = $this->getDoctrine()->getManager();
         $em->persist($phone);
         $em->flush();
@@ -147,6 +158,14 @@ class DefaultController extends Controller
     private function processForm(Request $request, FormInterface $form)
     {
         $data = json_decode($request->getContent(), true);
+        if (null === $data) {
+            $apiProblem = new ApiProblem(
+                400,
+                ApiProblem::TYPE_INVALID_REQUEST_BODY_FORMAT
+            );
+
+            throw  new ApiProblemException($apiProblem);
+        }
 
         $clearMissing = $request->getMethod() != 'PATCH';
         $form->submit($data, $clearMissing);
@@ -168,5 +187,38 @@ class DefaultController extends Controller
         $serializer = new Serializer($normalizers, $encoders);
         $json = $serializer->serialize($data, 'json');
         return $json;
+    }
+
+    private function getErrorsFromForm(FormInterface $form)
+    {
+        $errors = array();
+        foreach ($form->getErrors() as $error) {
+            $errors[] = $error->getMessage();
+        }
+
+        foreach ($form->all() as $childForm) {
+            if ($childForm instanceof FormInterface) {
+                if ($childErrors = $this->getErrorsFromForm($childForm)) {
+                    $errors[$childForm->getName()] = $childErrors;
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+    private function throwApiProblemException(FormInterface $form)
+    {
+        $errors = $this->getErrorsFromForm($form);
+
+        $apiProblem = new ApiProblem(
+            400,
+            ApiProblem::TYPE_VALIDATION_ERROR
+        );
+
+        $apiProblem->set('errors', $errors);
+
+        throw  new ApiProblemException($apiProblem);
+
     }
 }
