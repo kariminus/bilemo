@@ -2,24 +2,15 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Api\ApiProblem;
-use AppBundle\Api\ApiProblemException;
 use AppBundle\Entity\Phone;
 use AppBundle\Form\PhoneType;
 use AppBundle\Form\UpdatePhoneType;
-use AppBundle\Repository\PhoneRepository;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\Serializer\Serializer;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+
 
 /**
  * @Route(name="default_controller")
@@ -43,26 +34,7 @@ class DefaultController extends Controller
      */
     public function newAction(Request $request)
     {
-        $phone = new Phone();
-        $form = $this->createForm(PhoneType::class, $phone);
-        $this->processForm($request, $form);
-
-        if (!$form->isValid()) {
-            $this->throwApiProblemException($form);
-        }
-
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($phone);
-        $em->flush();
-
-        $response = $this->createApiResponse($phone, 201);
-        $phoneUrl = $this->generateUrl(
-            'api_phones_show',
-            ['name' => $phone->getName()]
-        );
-        $response->headers->set('Location', $phoneUrl);
-
-        return $response;
+        return $this->get('manage_phone')->phoneNew($request);
     }
 
     /**
@@ -71,20 +43,7 @@ class DefaultController extends Controller
      */
     public function showAction($name)
     {
-        $phone = $this->getDoctrine()
-            ->getRepository('AppBundle:Phone')
-            ->findOneByName($name);
-
-        if (!$phone) {
-            throw $this->createNotFoundException(sprintf(
-                'No phone found with name "%s"',
-                $name
-            ));
-        }
-
-        $response = $this->createApiResponse($phone, 200);
-
-        return $response;
+        return $this->get('manage_phone')->phoneShow($name);
     }
 
     /**
@@ -93,13 +52,7 @@ class DefaultController extends Controller
      */
     public function listAction()
     {
-        $phones = $this->getDoctrine()
-            ->getRepository('AppBundle:Phone')
-            ->findAll();
-
-        $response = $this->createApiResponse(['phones' => $phones], 200);
-
-        return $response;
+        return $this->get('manage_phone')->phoneList();
     }
 
     /**
@@ -108,31 +61,7 @@ class DefaultController extends Controller
      */
     public function updateAction($name, Request $request)
     {
-        $phone = $this->getDoctrine()
-            ->getRepository('AppBundle:Phone')
-            ->findOneByName($name);
-
-        if (!$phone) {
-            throw $this->createNotFoundException(sprintf(
-                'No phone found with name "%s"',
-                $name
-            ));
-        }
-
-        $form = $this->createForm(UpdatePhoneType::class, $phone);
-        $this->processForm($request, $form);
-
-        if (!$form->isValid()) {
-            $this->throwApiProblemException($form);
-        }
-
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($phone);
-        $em->flush();
-
-        $response = $this->createApiResponse($phone, 200);
-
-        return $response;
+        return $this->get('manage_phone')->phoneUpdate($request, $name);
     }
 
     /**
@@ -141,84 +70,7 @@ class DefaultController extends Controller
      */
     public function deleteAction($name)
     {
-        $phone = $this->getDoctrine()
-            ->getRepository('AppBundle:Phone')
-            ->findOneByName($name);
-
-        if ($phone) {
-            $em = $this->getDoctrine()->getManager();
-            $em->remove($phone);
-            $em->flush();
-        }
-
-        return new Response(null, 204);
+        return $this->get('manage_phone')->phoneDelete($name);
     }
 
-
-    private function processForm(Request $request, FormInterface $form)
-    {
-        $data = json_decode($request->getContent(), true);
-        if (null === $data) {
-            $apiProblem = new ApiProblem(
-                400,
-                ApiProblem::TYPE_INVALID_REQUEST_BODY_FORMAT
-            );
-
-            throw  new ApiProblemException($apiProblem);
-        }
-
-        $clearMissing = $request->getMethod() != 'PATCH';
-        $form->submit($data, $clearMissing);
-    }
-
-    protected function createApiResponse($data, $statusCode = 200)
-    {
-        $json = $this->serializer($data);
-
-        return new Response($json, $statusCode, array(
-            'Content-Type' => 'application/json'
-        ));
-    }
-
-    public function serializer($data)
-    {
-        $encoders = array(new XmlEncoder(), new JsonEncoder());
-        $normalizers = array(new ObjectNormalizer());
-        $serializer = new Serializer($normalizers, $encoders);
-        $json = $serializer->serialize($data, 'json');
-        return $json;
-    }
-
-    private function getErrorsFromForm(FormInterface $form)
-    {
-        $errors = array();
-        foreach ($form->getErrors() as $error) {
-            $errors[] = $error->getMessage();
-        }
-
-        foreach ($form->all() as $childForm) {
-            if ($childForm instanceof FormInterface) {
-                if ($childErrors = $this->getErrorsFromForm($childForm)) {
-                    $errors[$childForm->getName()] = $childErrors;
-                }
-            }
-        }
-
-        return $errors;
-    }
-
-    private function throwApiProblemException(FormInterface $form)
-    {
-        $errors = $this->getErrorsFromForm($form);
-
-        $apiProblem = new ApiProblem(
-            400,
-            ApiProblem::TYPE_VALIDATION_ERROR
-        );
-
-        $apiProblem->set('errors', $errors);
-
-        throw  new ApiProblemException($apiProblem);
-
-    }
 }

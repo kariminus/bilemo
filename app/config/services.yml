@@ -29,6 +29,15 @@ services:
         public: true
         tags: ['controller.service_arguments']
 
+    manage_api:
+        class: AppBundle\Api\ManageApi
+        public: true
+
+    manage_phone:
+        class: AppBundle\Phone\ManagePhone
+        arguments: ['@doctrine.orm.entity_manager', '@form.factory', '@manage_api', '@router', '']
+        public: true
+
     api_exception_subscriber:
         class: AppBundle\EventListener\ApiExceptionSubscriber
         arguments: ['%kernel.debug%']
