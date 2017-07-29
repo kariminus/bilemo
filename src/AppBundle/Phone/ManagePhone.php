@@ -6,25 +6,30 @@ use AppBundle\Api\ManageApi;
 use AppBundle\Entity\Phone;
 use AppBundle\Form\PhoneType;
 use AppBundle\Form\UpdatePhoneType;
+use AppBundle\Pagination\PaginatedCollection;
+use AppBundle\Pagination\PaginationFactory;
 use Doctrine\ORM\EntityManager;
+use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Pagerfanta\Pagerfanta;
+use Symfony\Component\Cache\Adapter\DoctrineAdapter;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Response;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Symfony\Component\Routing\RouterInterface;
 
 
 class ManagePhone
 {
-
     /**
      * ManagePhone constructor.
      */
-    public function __construct(EntityManager $em, $formFactory, ManageApi $manageApi, $router)
+    public function __construct(EntityManager $em, $formFactory, ManageApi $manageApi, $router, PaginationFactory $paginationFactory)
     {
         $this->em = $em;
         $this->formFactory = $formFactory;
         $this->manageApi = $manageApi;
         $this->router = $router;
+        $this->paginationFactory = $paginationFactory;
 
     }
 
@@ -74,13 +79,18 @@ class ManagePhone
         return $response;
     }
 
-    public function phoneList()
+    public function phoneList($request)
     {
-        $phones = $this->em
+        $qb = $this->em
             ->getRepository('AppBundle:Phone')
-            ->findAll();
+            ->findAllQueryBuilder();
 
-        $response = $this->manageApi->createApiResponse(['phones' => $phones], 200);
+        $paginatedCollection = $this->paginationFactory
+            ->createCollection($qb, $request, 'api_phones_collection');
+
+        $response = $this->manageApi->createApiResponse([
+            $paginatedCollection
+        ]);
 
         return $response;
     }

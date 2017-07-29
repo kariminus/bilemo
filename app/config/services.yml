@@ -35,7 +35,7 @@ services:
 
     manage_phone:
         class: AppBundle\Phone\ManagePhone
-        arguments: ['@doctrine.orm.entity_manager', '@form.factory', '@manage_api', '@router', '']
+        arguments: ['@doctrine.orm.entity_manager', '@form.factory', '@manage_api', '@router', '@pagination_factory']
         public: true
 
     api_exception_subscriber:
@@ -43,3 +43,7 @@ services:
         arguments: ['%kernel.debug%']
         tags:
             - { name: kernel.event_subscriber }
+
+    pagination_factory:
+        class: AppBundle\Pagination\PaginationFactory
+        arguments: ['@doctrine.orm.entity_manager', '@router']

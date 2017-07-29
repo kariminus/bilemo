@@ -2,14 +2,10 @@
 
 namespace AppBundle\Controller;
 
-use AppBundle\Entity\Phone;
-use AppBundle\Form\PhoneType;
-use AppBundle\Form\UpdatePhoneType;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 
 /**
@@ -47,12 +43,12 @@ class DefaultController extends Controller
     }
 
     /**
-     * @Route("/api/phones")
+     * @Route("/api/phones", name="api_phones_collection")
      * @Method("GET")
      */
-    public function listAction()
+    public function listAction(Request $request)
     {
-        return $this->get('manage_phone')->phoneList();
+        return $this->get('manage_phone')->phoneList($request);
     }
 
     /**
