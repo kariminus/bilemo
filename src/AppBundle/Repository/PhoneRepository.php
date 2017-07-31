@@ -10,8 +10,15 @@ namespace AppBundle\Repository;
  */
 class PhoneRepository extends \Doctrine\ORM\EntityRepository
 {
-    public function findAllQueryBuilder()
+    public function findAllQueryBuilder($filter =' ')
     {
-        return $this->createQueryBuilder('phone');
+        $qb =  $this->createQueryBuilder('phone');
+
+        if ($filter) {
+            $qb->andWhere('phone.name LIKE :filter OR phone.brand LIKE :filter')
+                ->setParameter('filter', '%'.$filter.'%');
+        }
+
+        return $qb;
     }
 }

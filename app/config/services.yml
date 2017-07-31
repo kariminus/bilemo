@@ -12,7 +12,7 @@ services:
         #autoconfigure: true
         # this means you cannot fetch services directly from the container via $container->get()
         # if you need to do this, you can override this setting on individual services
-        public: false
+        public: true
 
     # makes classes in src/AppBundle available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -26,17 +26,15 @@ services:
     # and have a tag that allows actions to type-hint services
     AppBundle\Controller\:
         resource: '../../src/AppBundle/Controller'
-        public: true
         tags: ['controller.service_arguments']
 
     manage_api:
         class: AppBundle\Api\ManageApi
-        public: true
 
     manage_phone:
         class: AppBundle\Phone\ManagePhone
-        arguments: ['@doctrine.orm.entity_manager', '@form.factory', '@manage_api', '@router', '@pagination_factory']
-        public: true
+        arguments: ['@doctrine.orm.entity_manager', '@form.factory', '@manage_api', '@router', '@pagination_factory', '@security.authorization_checker']
+
 
     api_exception_subscriber:
         class: AppBundle\EventListener\ApiExceptionSubscriber
@@ -47,3 +45,9 @@ services:
     pagination_factory:
         class: AppBundle\Pagination\PaginationFactory
         arguments: ['@doctrine.orm.entity_manager', '@router']
+
+    link_serialization_subscriber:
+            class: AppBundle\Serializer\LinkSerializationSubscriber
+            arguments: ['@router', '@annotation_reader']
+            tags:
+                - { name: jms_serializer.event_subscriber }

@@ -6,31 +6,33 @@ use AppBundle\Api\ManageApi;
 use AppBundle\Entity\Phone;
 use AppBundle\Form\PhoneType;
 use AppBundle\Form\UpdatePhoneType;
-use AppBundle\Pagination\PaginatedCollection;
 use AppBundle\Pagination\PaginationFactory;
 use Doctrine\ORM\EntityManager;
-use Pagerfanta\Adapter\DoctrineORMAdapter;
-use Pagerfanta\Pagerfanta;
-use Symfony\Component\Cache\Adapter\DoctrineAdapter;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 
 class ManagePhone
 {
     /**
+     * @var AuthorizationChecker
+     */
+    private $authorizationChecker;
+
+    /**
      * ManagePhone constructor.
      */
-    public function __construct(EntityManager $em, $formFactory, ManageApi $manageApi, $router, PaginationFactory $paginationFactory)
+    public function __construct(EntityManager $em, $formFactory, ManageApi $manageApi, $router, PaginationFactory $paginationFactory, AuthorizationCheckerInterface $authorizationChecker)
     {
         $this->em = $em;
         $this->formFactory = $formFactory;
         $this->manageApi = $manageApi;
         $this->router = $router;
         $this->paginationFactory = $paginationFactory;
-
+        $this->authorizationChecker = $authorizationChecker;
     }
 
     public function phoneIndex()
@@ -40,6 +42,10 @@ class ManagePhone
 
     public function phoneNew($request)
     {
+
+        if (!$this->authorizationChecker->isGranted('ROLE_USER')) {
+            throw new AccessDeniedException();
+        }
         $phone = new Phone();
         $form = $this->formFactory->create(PhoneType::class, $phone);
         $this->manageApi->processForm($request, $form);
@@ -81,9 +87,12 @@ class ManagePhone
 
     public function phoneList($request)
     {
+
+        $filter = $request->query->get('filter');
+
         $qb = $this->em
             ->getRepository('AppBundle:Phone')
-            ->findAllQueryBuilder();
+            ->findAllQueryBuilder($filter);
 
         $paginatedCollection = $this->paginationFactory
             ->createCollection($qb, $request, 'api_phones_collection');

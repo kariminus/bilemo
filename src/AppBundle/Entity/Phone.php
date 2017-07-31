@@ -3,13 +3,21 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
+use AppBundle\Annotation\Link;
 
 /**
  * Phone
  *
  * @ORM\Table(name="phone")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\PhoneRepository")
+ * @Serializer\ExclusionPolicy("all")
+ * @Link(
+ *  "self",
+ *  route = "api_phones_show",
+ *  params = { "name": "object.getName()" }
+ * )
  */
 class Phone
 {
