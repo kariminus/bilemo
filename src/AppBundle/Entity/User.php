@@ -10,11 +10,11 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 /**
  * Entity
  *
- * @ORM\Table(name="entity")
- * @ORM\Entity(repositoryClass="AppBundle\Repository\EntityRepository")
+ * @ORM\Table(name="user")
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\UserRepository")
  * @UniqueEntity(fields={"email"}, message="Ce mail est déjà utilisé")
  */
-class Entity implements UserInterface
+class User implements UserInterface
 {
     /**
      * @var int
@@ -73,7 +73,7 @@ class Entity implements UserInterface
      *
      * @param string $email
      *
-     * @return Entity
+     * @return User
      */
     public function setEmail($email)
     {

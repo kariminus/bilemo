@@ -4,57 +4,68 @@ namespace AppBundle\EventListener;
 
 use AppBundle\Api\ApiProblem;
 use AppBundle\Api\ApiProblemException;
+use AppBundle\Api\ResponseFactory;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class ApiExceptionSubscriber implements EventSubscriberInterface
 {
-
     private $debug;
 
-    public function __construct($debug)
+    private $responseFactory;
+
+    private $logger;
+
+    public function __construct($debug, ResponseFactory $responseFactory, LoggerInterface $logger)
     {
         $this->debug = $debug;
+        $this->responseFactory = $responseFactory;
+        $this->logger = $logger;
     }
 
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
-        $request = $event->getRequest();
-        if (strpos($request->getPathInfo(), '/api') !==0) {
+        // only reply to /api URLs
+        if (strpos($event->getRequest()->getPathInfo(), '/api') !== 0) {
             return;
         }
 
         $e = $event->getException();
+
         $statusCode = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
 
-        if ($statusCode == 500 && $this->debug) {
+        // allow 500 errors to be thrown
+        if ($this->debug && $statusCode >= 500) {
             return;
         }
+
+        $this->logException($e);
 
         if ($e instanceof ApiProblemException) {
             $apiProblem = $e->getApiProblem();
         } else {
-            $apiProblem = new ApiProblem($statusCode);
 
+
+            $apiProblem = new ApiProblem(
+                $statusCode
+            );
+
+            /*
+             * If it's an HttpException message (e.g. for 404, 403),
+             * we'll say as a rule that the exception message is safe
+             * for the client. Otherwise, it could be some sensitive
+             * low-level exception, which should *not* be exposed
+             */
             if ($e instanceof HttpExceptionInterface) {
                 $apiProblem->set('detail', $e->getMessage());
             }
-
         }
 
-        $data = $apiProblem->toArray();
-        if ($data['type'] != 'about:blank') {
-            $data['type'] = 'http://localhost:8001/docs/errors#'.$data['type'];
-        }
-
-        $response = new JsonResponse(
-            $data,
-            $apiProblem->getStatusCode()
-        );
-        $response->headers->set('Content-Type', 'application/problem+json');
+        $response = $this->responseFactory->createResponse($apiProblem);
 
         $event->setResponse($response);
     }
@@ -66,4 +77,20 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
         );
     }
 
+    /**
+     * Adapted from the core Symfony exception handling in ExceptionListener
+     *
+     * @param \Exception $exception
+     */
+    private function logException(\Exception $exception)
+    {
+        $message = sprintf('Uncaught PHP Exception %s: "%s" at %s line %s', get_class($exception), $exception->getMessage(), $exception->getFile(), $exception->getLine());
+        $isCritical = !$exception instanceof HttpExceptionInterface || $exception->getStatusCode() >= 500;
+        $context = array('exception' => $exception);
+        if ($isCritical) {
+            $this->logger->critical($message, $context);
+        } else {
+            $this->logger->error($message, $context);
+        }
+    }
 }

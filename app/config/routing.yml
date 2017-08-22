@@ -1,10 +1,20 @@
 app:
     resource: '@AppBundle/Controller/'
     type: annotation
-    defaults:
-        _format: json
 
 easy_admin_bundle:
     resource: "@EasyAdminBundle/Controller/AdminController.php"
     type:     annotation
     prefix:   /admin
+
+security_login:
+    path:     /login
+    defaults: { _controller: AppBundle:Security:login }
+
+security_logout:
+    path:     /logout
+    defaults: { _controller: AppBundle:Security:logout }
+
+user_register:
+    path:     /register/
+    defaults: { _controller: AppBundle:Security:register }

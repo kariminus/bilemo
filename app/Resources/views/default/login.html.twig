@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div id="connection-form" class="flexbox-col-10">
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error.messageKey|trans(error.messageData, 'security') }}
+            </div>
+        {% endif %}
+        {{ form_start(form, {'attr': {'class': 'form_login'}}) }}
+        {{ form_errors(form) }}
+
+        <div class="form-group">
+            {{ form_row(form._username) }}
+            {{ form_errors(form._username) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_row(form._password) }}
+            {{ form_errors(form._password) }}
+        </div>
+
+        <div class="form-group"><input type="checkbox" id="remember_me" name="_remember_me"/>
+            <label for="remember_me">Se souvenir de moi</label></div>
+
+
+        <div class="button-bg">
+            <button type="submit">
+                Se connecter
+            </button>
+        </div>
+
+    </div>
+{% endblock %}

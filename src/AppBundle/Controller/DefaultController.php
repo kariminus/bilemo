@@ -4,19 +4,17 @@ namespace AppBundle\Controller;
 
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
 
-/**
- * @Route(name="default_controller")
- */
 class DefaultController extends Controller
 {
     /**
      * @Route("/", name="homepage")
      */
-    public function indexAction(Request $request)
+    public function indexAction()
     {
         // replace this example code with whatever you need
         return $this->render('default/index.html.twig', [
@@ -26,6 +24,7 @@ class DefaultController extends Controller
 
     /**
      * @Route("/api/phones")
+     * @Security("is_granted('ROLE_ADMIN')")
      * @Method("POST")
      */
     public function newAction(Request $request)
@@ -53,6 +52,7 @@ class DefaultController extends Controller
 
     /**
      * @Route("/api/phones/{name}")
+     * @Security("is_granted('ROLE_ADMIN')")
      * @Method({"PUT", "PATCH"})
      */
     public function updateAction($name, Request $request)
@@ -62,6 +62,7 @@ class DefaultController extends Controller
 
     /**
      * @Route("/api/phones/{name}")
+     * @Security("is_granted('ROLE_ADMIN')")
      * @Method("DELETE")
      */
     public function deleteAction($name)

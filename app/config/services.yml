@@ -38,7 +38,7 @@ services:
 
     api_exception_subscriber:
         class: AppBundle\EventListener\ApiExceptionSubscriber
-        arguments: ['%kernel.debug%']
+        arguments: ['%kernel.debug%', '@api.response_factory', '@logger']
         tags:
             - { name: kernel.event_subscriber }
 
@@ -47,7 +47,20 @@ services:
         arguments: ['@doctrine.orm.entity_manager', '@router']
 
     link_serialization_subscriber:
-            class: AppBundle\Serializer\LinkSerializationSubscriber
-            arguments: ['@router', '@annotation_reader']
-            tags:
-                - { name: jms_serializer.event_subscriber }
+        class: AppBundle\Serializer\LinkSerializationSubscriber
+        arguments: ['@router', '@annotation_reader']
+        tags:
+            - { name: jms_serializer.event_subscriber }
+
+    app.security.login_form_authenticator:
+        class: AppBundle\Security\LoginFormAuthenticator
+        autowire: true
+
+    app.doctrine.hash_password_listener:
+        class: AppBundle\Doctrine\HashPasswordListener
+        autowire: true
+        tags:
+            - { name: doctrine.event_subscriber }
+
+    api.response_factory:
+        class: AppBundle\Api\ResponseFactory
