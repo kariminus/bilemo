@@ -6,21 +6,24 @@ use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 use AppBundle\Annotation\Link;
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 /**
  * Phone
  *
  * @ORM\Table(name="phone")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\PhoneRepository")
- * @Serializer\ExclusionPolicy("all")
  * @Link(
  *  "self",
  *  route = "api_phones_show",
  *  params = { "name": "object.getName()" }
  * )
+ * @Vich\Uploadable
  */
 class Phone
 {
+
     /**
      * @var int
      *
@@ -39,12 +42,43 @@ class Phone
     private $name;
 
     /**
-     * @var string
-     *
-     * @Assert\NotBlank(message="Please enter a brand")
-     * @ORM\Column(name="brand", type="string", length=255)
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Brand", inversedBy="phones")
+     * @Assert\NotBlank(message="Please select a brand")
+     * @ORM\JoinColumn(name="brand_id", referencedColumnName="id")
      */
-    private $brand;
+    protected $brand;
+
+    /**
+     * @ORM\Column(type="datetime")
+     * @var \DateTime
+     */
+    private $createdAt;
+
+    /**
+     * @ORM\Column(type="date")
+     * @var \DateTime
+     */
+    private $releasedAt;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @var string
+     */
+    private $image;
+
+    /**
+     * @Vich\UploadableField(mapping="phone_images", fileNameProperty="image")
+     * @var File
+     */
+    private $imageFile;
+
+    /**
+     * Phone constructor
+     */
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime('now');
+    }
 
 
     /**
@@ -103,6 +137,72 @@ class Phone
     public function getBrand()
     {
         return $this->brand;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * @param \DateTime $createdAt
+     */
+    public function setCreatedAt($createdAt)
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getReleasedAt()
+    {
+        return $this->releasedAt;
+    }
+
+    /**
+     * @param \DateTime $releasedAt
+     */
+    public function setReleasedAt($releasedAt)
+    {
+        $this->releasedAt = $releasedAt;
+    }
+
+
+    public function setImageFile(File $image = null)
+    {
+        $this->imageFile = $image;
+
+        // VERY IMPORTANT:
+        // It is required that at least one field changes if you are using Doctrine,
+        // otherwise the event listeners won't be called and the file is lost
+        if ($image) {
+            // if 'updatedAt' is not defined in your entity, use another property
+            $this->createdAt = new \DateTime('now');
+        }
+    }
+
+    public function getImageFile()
+    {
+        return $this->imageFile;
+    }
+
+    public function setImage($image)
+    {
+        $this->image = $image;
+    }
+
+    public function getImage()
+    {
+        return $this->image;
+    }
+
+    public function __toString()
+    {
+        return (string) $this->getName();
     }
 }
 

@@ -1,0 +1,19 @@
+{
+  "devDependencies": {
+    "@symfony/webpack-encore": "^0.8.0",
+    "bootstrap-sass": "^3.3.7",
+    "jquery": "^3.2.1",
+    "node-sass": "^4.5.3",
+    "redirectjs": "^1.9.0",
+    "sass-loader": "^6.0.6",
+    "vue": "^2.4.2",
+    "vue-loader": "^13.0.4",
+    "vue-template-compiler": "^2.4.2"
+  },
+  "scripts": {
+    "dev": "./node_modules/.bin/encore dev --watch"
+  },
+  "dependencies": {
+    "vue-router": "^2.7.0"
+  }
+}

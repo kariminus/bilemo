@@ -39,9 +39,10 @@ class ManageApi
 
     public function serializer($data)
     {
-        $encoders = array(new XmlEncoder(), new JsonEncoder());
-        $normalizers = array(new ObjectNormalizer());
-        $serializer = new Serializer($normalizers, $encoders);
+        $encoder = new JsonEncoder();
+        $normalizer = new ObjectNormalizer();
+        $normalizer->setIgnoredAttributes(array('phones'));
+        $serializer = new Serializer(array($normalizer), array($encoder));
         $json = $serializer->serialize($data, 'json');
         return $json;
     }

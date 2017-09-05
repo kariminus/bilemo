@@ -7,6 +7,8 @@ imports:
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
     locale: fr
+    app.path.phones_images: /uploads/images/phones
+    app.path.brands_images: /uploads/images/brands
 
 framework:
     #esi: ~
@@ -72,11 +74,68 @@ easy_admin:
     entities:
         Phone:
             class: AppBundle\Entity\Phone
+            label: Phones
+            list:
+                title: 'List of %%entity_label%%'
+                actions: ['show']
+                fields:
+                    - 'id'
+                    - 'name'
+                    - 'brand'
+                    - { property: 'releasedAt', format: 'd M Y', label: 'Released date' }
+                    - { property: 'image', type: 'image', base_path: '%app.path.phones_images%', sortable: false }
+            show:
+                fields:
+                    - 'name'
+                    - 'brand'
+                    - 'releasedAt'
+                    - { property: 'image', type: 'image', base_path: '%app.path.phones_images%' }
+            form:
+                fields:
+                    - 'name'
+                    - 'brand'
+                    - { property: 'releasedAt', format: 'M Y', label: 'Released date' }
+                    - { property: 'imageFile', type: 'file' }
+
         Brand:
             class: AppBundle\Entity\Brand
+            label: Brands
+            list:
+                title: 'List of %%entity_label%%'
+                actions: ['show']
+                fields:
+                    - 'id'
+                    - 'name'
+                    - 'description'
+                    - 'country'
+                    - { property: 'image', type: 'image', base_path: '%app.path.brands_images%', sortable: false }
+            show:
+                fields:
+                    - 'name'
+                    - 'description'
+                    - 'country'
+                    - { property: 'image', type: 'image', base_path: '%app.path.brands_images%' }
+            form:
+                fields:
+                    - 'name'
+                    - 'description'
+                    - 'country'
+                    - { property: 'imageFile', type: 'file' }
+
 
 lexik_jwt_authentication:
     private_key_path: '%kernel.root_dir%/../var/jwt/private.pem'
     public_key_path:  '%kernel.root_dir%/../var/jwt/public.pem'
     pass_phrase:      '%jwt_key_pass_phrase%'
     token_ttl:        '3600'
+
+vich_uploader:
+    db_driver: orm
+    mappings:
+        phone_images:
+            uri_prefix:         '%app.path.phones_images%'
+            upload_destination: '%kernel.root_dir%/../web/uploads/images/phones'
+
+        brand_images:
+            uri_prefix:         '%app.path.brands_images%'
+            upload_destination: '%kernel.root_dir%/../web/uploads/images/brands'
