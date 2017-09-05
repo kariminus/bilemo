@@ -22,10 +22,6 @@
             data: {
                 phones: []
             },
-            components: {
-                'phone' : Phone,
-                'phoneDetail' : PhoneDetail
-            },
             created() {
                 // GET /someUrl
                 this.$http.get('http://127.0.0.1:8001/api/phones').then(response => {
