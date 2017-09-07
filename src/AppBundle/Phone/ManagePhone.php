@@ -67,16 +67,16 @@ class ManagePhone
         return $response;
     }
 
-    public function phoneShow($name)
+    public function phoneShow($slug)
     {
         $phone = $this->em
             ->getRepository('AppBundle:Phone')
-            ->findOneByName($name);
+            ->findOneBySlug($slug);
 
         if (!$phone) {
             throw new NotFoundHttpException(sprintf(
                 'No phone found with name "%s"',
-                $name
+                $slug
             ));
         }
 

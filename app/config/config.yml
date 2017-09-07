@@ -139,3 +139,8 @@ vich_uploader:
         brand_images:
             uri_prefix:         '%app.path.brands_images%'
             upload_destination: '%kernel.root_dir%/../web/uploads/images/brands'
+
+stof_doctrine_extensions:
+    orm:
+        default:
+            sluggable: true

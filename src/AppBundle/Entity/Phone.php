@@ -8,6 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use AppBundle\Annotation\Link;
 use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 /**
  * Phone
@@ -71,6 +72,12 @@ class Phone
      * @var File
      */
     private $imageFile;
+
+    /**
+     * @Gedmo\Slug(fields={"name"})
+     * @ORM\Column(name="slug", type="string", length=255)
+     */
+    private $slug;
 
     /**
      * Phone constructor
@@ -198,6 +205,16 @@ class Phone
     public function getImage()
     {
         return $this->image;
+    }
+
+    public function getSlug()
+    {
+        return $this->slug;
+    }
+
+    public function setSlug($slug)
+    {
+        $this->slug = $slug;
     }
 
     public function __toString()
