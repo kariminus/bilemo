@@ -18,3 +18,11 @@ security_logout:
 user_register:
     path:     /register/
     defaults: { _controller: AppBundle:Security:register }
+
+vuejs_fallback:
+    defaults:  { _controller: AppBundle:Default:index }
+    path:   /{req}
+    requirements:
+        req: .*
+    defaults:
+        req: null

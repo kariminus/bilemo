@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import App from './App.vue'
 import VueResource from 'vue-resource';
 import { routes } from './routes';
+import { store } from './store';
 
 Vue.use(VueResource);
 Vue.use(VueRouter);
@@ -15,5 +16,9 @@ const router = new VueRouter({
 new Vue({
     el: '#app',
     router,
-    render: h => h(App)
+    store,
+    render: h => h(App),
+    created () {
+        this.$store.dispatch('loadPhones')
+    }
 })

@@ -3,7 +3,7 @@
         <ul v-for="phone in phones">
             <router-link
                     tag="li"
-                    :to="'/'+phone.slug"
+                    :to="'/phone/' + phone.slug"
                     class="list-group-item"
                     style="cursor: pointer">{{ phone.name }}</router-link>
         </ul>
@@ -12,16 +12,10 @@
 
 <script>
     export default {
-        data() {
-            return {
-                phones: [],
-            };
-        },
-        mounted() {
-            // GET /someUrl
-            this.$http.get('http://127.0.0.1:8001/api/phones').then(response => {
-                this.phones = response.data[0].items;
-            })
+        computed: {
+            phones () {
+                return this.$store.getters.loadedPhones
+            }
         }
     }
 </script>

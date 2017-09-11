@@ -22,7 +22,7 @@ export const routes = [
         default: App
     }, children: [
         { path: '', component: Phone },
-        { path: ':slug', component: PhoneDetail }
+        { path: '/phone/:slug', component: PhoneDetail, props: true }
         ]},
     { path: '*', redirect: '/' }
 ];
